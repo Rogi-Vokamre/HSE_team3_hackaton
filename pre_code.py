@@ -1,25 +1,50 @@
-# Итоговое задание № 1 - задача № 1 со звездочкой "Функция-генератор yield"
-def count_up_to(max_value):
-    count = 1
-    while count <= max_value:
-        yield count
-        count += 1
+# ВВОДНАЯ ЧАСТЬ
+import telebot
+from telebot import types
+import re
+from docx import Document
+import os
 
-max_value = int(input("Введите число, до которого будем считать: "))
+token = ""
 
-for number in count_up_to(max_value):
-    print(number)
+bot = telebot.TeleBot(token)
 
+CHECKMARK_EMOJI = "\u2705"
+ONE_EMOJI = "\u0031\uFE0F\u20E3"
+TWO_EMOJI = "\u0032\uFE0F\u20E3"
+THREE_EMOJI = "\u0033\uFE0F\u20E3"
+EXCLAM_EMOJI = "\u26A0\uFE0F"
+FIRE_EMOJI = "\U0001F525"
+SHIP_EMOJI = "\U0001F680"
+CELEBRATE_EMOJI = "\U0001F389"
+CARD_EMOJI = "\U0001F4B3"
 
-# Итоговое задание № 1 - задача № 1 "Функция для чисел Фибоначчи"
-def fib(n):
-    a, b = 0, 1
-    sequence = []
-    for _ in range(n):
-        sequence.append(a)
-        a, b = b, a + b
-    return sequence
+# Функция для заполнения шаблона документа
+def fill_template(template_path, output_path, data):
+    # Загрузка шаблона
+    doc = Document(template_path)
 
-n = int(input("Введите номер числа Фибоначчи, на котором следует остановиться: "))
+    # Замена плейсхолдеров на данные
+    for paragraph in doc.paragraphs:
+        # Флаг, чтобы проверить, были ли изменения в параграфе
+        replaced = False
 
-print(fib(n))
+        # Проходим по всем run в параграфе
+        for run in paragraph.runs:
+            for key, value in data.items():
+                placeholder = f"{{{{{key}}}}}"  # Плейсхолдер в формате {{key}}
+                if placeholder in run.text:
+                    # Заменяем плейсхолдер на значение, сохраняя форматирование
+                    run.text = run.text.replace(placeholder, str(value))
+                    replaced = True
+
+        # Если плейсхолдер не найден в runs, проверяем весь текст параграфа
+        if not replaced:
+            for key, value in data.items():
+                placeholder = f"{{{{{key}}}}}"
+                if placeholder in paragraph.text:
+                    # Заменяем текст в параграфе (без сохранения форматирования)
+                    paragraph.text = paragraph.text.replace(placeholder, str(value))
+
+    # Сохранение нового документа
+    doc.save(output_path)
